@@ -17,7 +17,6 @@ import (
 	"github.com/mattn/go-isatty"
 	"github.com/xquare-dashboard/pkg/infra/log/term"
 	"github.com/xquare-dashboard/pkg/infra/log/text"
-	"github.com/xquare-dashboard/pkg/util"
 )
 
 var (

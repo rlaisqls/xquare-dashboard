@@ -106,7 +106,7 @@ func TestFormatDuration(t *testing.T) {
 func TestGetIntervalFrom(t *testing.T) {
 	testCases := []struct {
 		name            string
-		dsInfo          *datasources.DataSource
+		dsInfo          *datasources.DataSourceType
 		queryInterval   string
 		queryIntervalMs int64
 		defaultInterval time.Duration

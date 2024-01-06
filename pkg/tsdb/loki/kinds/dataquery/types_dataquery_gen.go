@@ -39,11 +39,11 @@ const (
 // Specific implementations will *extend* this interface, adding the required
 // properties for the given context.
 type DataQuery struct {
-	// For mixed data sources the selected datasource is on the query level.
+	// For mixed data sources the selected datasources is on the query level.
 	// For non mixed scenarios this is undefined.
 	// TODO find a better way to do this ^ that's friendly to schema
 	// TODO this shouldn't be unknown but DataSourceRef | null
-	Datasource *any `json:"datasource,omitempty"`
+	Datasource *any `json:"datasources,omitempty"`
 
 	// Hide true if query is disabled (ie should not be returned to the dashboard)
 	// Note this does not always imply that the query should not be executed since
@@ -67,11 +67,11 @@ type LokiDataQuery struct {
 	// properties for the given context.
 	DataQuery
 
-	// For mixed data sources the selected datasource is on the query level.
+	// For mixed data sources the selected datasources is on the query level.
 	// For non mixed scenarios this is undefined.
 	// TODO find a better way to do this ^ that's friendly to schema
 	// TODO this shouldn't be unknown but DataSourceRef | null
-	Datasource *any             `json:"datasource,omitempty"`
+	Datasource *any             `json:"datasources,omitempty"`
 	EditorMode *QueryEditorMode `json:"editorMode,omitempty"`
 
 	// The LogQL query.

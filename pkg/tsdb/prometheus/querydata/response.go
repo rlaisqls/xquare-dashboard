@@ -25,7 +25,7 @@ func (s *QueryData) parseResponse(ctx context.Context, q *models.Query, res *htt
 		}
 	}()
 
-	ctx, endSpan := utils.StartTrace(ctx, s.tracer, "datasource.prometheus.parseResponse")
+	ctx, endSpan := utils.StartTrace(ctx, s.tracer, "datasources.prometheus.parseResponse")
 	defer endSpan()
 
 	iter := jsoniter.Parse(jsoniter.ConfigDefault, res.Body, 1024)
@@ -54,7 +54,7 @@ func (s *QueryData) parseResponse(ctx context.Context, q *models.Query, res *htt
 }
 
 func (s *QueryData) processExemplars(ctx context.Context, q *models.Query, dr backend.DataResponse) backend.DataResponse {
-	_, endSpan := utils.StartTrace(ctx, s.tracer, "datasource.prometheus.processExemplars")
+	_, endSpan := utils.StartTrace(ctx, s.tracer, "datasources.prometheus.processExemplars")
 	defer endSpan()
 	sampler := s.exemplarSampler()
 	labelTracker := exemplar.NewLabelTracker()

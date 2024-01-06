@@ -26,13 +26,13 @@ func (s *Service) CheckHealth(ctx context.Context, req *backend.CheckHealthReque
 	logger := logger.FromContext(ctx)
 	ds, err := s.getInstance(ctx, req.PluginContext)
 
-	// check that the datasource exists
+	// check that the datasources exists
 	if err != nil {
-		return getHealthCheckMessage("error getting datasource info", err)
+		return getHealthCheckMessage("error getting datasources info", err)
 	}
 
 	if ds == nil {
-		return getHealthCheckMessage("", errors.New("invalid datasource info received"))
+		return getHealthCheckMessage("", errors.New("invalid datasources info received"))
 	}
 
 	hc, err := healthcheck(ctx, req, ds)

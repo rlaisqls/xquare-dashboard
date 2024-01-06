@@ -101,7 +101,7 @@ func getHeuristics(ctx context.Context, i *instance) (*Heuristics, error) {
 		return nil, fmt.Errorf("failed to get buildinfo: %w", err)
 	}
 	if len(buildInfo.Data.Features) == 0 {
-		// If there are no features then this is a Prometheus datasource
+		// If there are no features then this is a Prometheus datasources
 		heuristics.Application = KindPrometheus
 		heuristics.Features.RulerApiEnabled = false
 	} else {

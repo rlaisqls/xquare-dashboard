@@ -649,7 +649,7 @@ func TestRateInterval(t *testing.T) {
 				To:   now.Add(1 * time.Hour),
 			},
 			JSON: []byte(`{
-			"datasource":{"type":"prometheus","uid":"zxS5e5W4k"},
+			"datasources":{"type":"prometheus","uid":"zxS5e5W4k"},
 			"datasourceId":38,
 			"editorMode":"code",
 			"exemplar":false,
@@ -683,7 +683,7 @@ func TestRateInterval(t *testing.T) {
 				To:   now.Add(5 * time.Minute),
 			},
 			JSON: []byte(`{
-			"datasource": {
+			"datasources": {
 		        "type": "prometheus",
 		        "uid": "2z9d6ElGk"
 		    },

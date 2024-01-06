@@ -95,8 +95,8 @@ func BadRequest(msgID string, opts ...BaseOpt) Base {
 //
 // msgID should be structured as component.errorBrief, for example
 //
-//	datasource.nameInvalid
-//	datasource.urlInvalid
+//	datasources.nameInvalid
+//	datasources.urlInvalid
 //	serviceaccounts.errInvalidInput
 func ValidationFailed(msgID string, opts ...BaseOpt) Base {
 	return NewBase(StatusValidationFailed, msgID, opts...)

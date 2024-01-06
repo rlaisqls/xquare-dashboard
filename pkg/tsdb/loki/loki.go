@@ -22,7 +22,6 @@ import (
 	"github.com/xquare-dashboard/pkg/infra/httpclient"
 	"github.com/xquare-dashboard/pkg/infra/log"
 	"github.com/xquare-dashboard/pkg/infra/tracing"
-	ngalertmodels "github.com/xquare-dashboard/pkg/services/ngalert/models"
 	"github.com/xquare-dashboard/pkg/tsdb/loki/kinds/dataquery"
 )
 
@@ -132,7 +131,7 @@ func callResource(ctx context.Context, req *backend.CallResourceRequest, sender 
 	}
 	lokiURL := fmt.Sprintf("/loki/api/v1/%s", url)
 
-	ctx, span := tracer.Start(ctx, "datasource.loki.CallResource", trace.WithAttributes(
+	ctx, span := tracer.Start(ctx, "datasources.loki.CallResource", trace.WithAttributes(
 		attribute.String("url", lokiURL),
 	))
 	defer span.End()
@@ -161,8 +160,6 @@ func callResource(ctx context.Context, req *backend.CallResourceRequest, sender 
 
 func (s *Service) QueryData(ctx context.Context, req *backend.QueryDataRequest) (*backend.QueryDataResponse, error) {
 	dsInfo, err := s.getDSInfo(ctx, req.PluginContext)
-	_, fromAlert := req.Headers[ngalertmodels.FromAlertHeaderName]
-	logger := logger.FromContext(ctx).New("fromAlert", fromAlert)
 	if err != nil {
 		logger.Error("Failed to get data source info", "err", err)
 		result := backend.NewQueryDataResponse()
@@ -177,7 +174,10 @@ func (s *Service) QueryData(ctx context.Context, req *backend.QueryDataRequest) 
 	return queryData(ctx, req, dsInfo, responseOpts, s.tracer, logger, true, false)
 }
 
-func queryData(ctx context.Context, req *backend.QueryDataRequest, dsInfo *datasourceInfo, responseOpts ResponseOpts, tracer tracing.Tracer, plog log.Logger, runInParallel bool, requestStructuredMetadata bool) (*backend.QueryDataResponse, error) {
+func queryData(
+	ctx context.Context, req *backend.QueryDataRequest, dsInfo *datasourceInfo, responseOpts ResponseOpts,
+	tracer tracing.Tracer, plog log.Logger, runInParallel bool, requestStructuredMetadata bool,
+) (*backend.QueryDataResponse, error) {
 	result := backend.NewQueryDataResponse()
 
 	api := newLokiAPI(dsInfo.HTTPClient, dsInfo.URL, plog, tracer, requestStructuredMetadata)
@@ -191,7 +191,7 @@ func queryData(ctx context.Context, req *backend.QueryDataRequest, dsInfo *datas
 
 	plog.Info("Prepared request to Loki", "duration", time.Since(start), "queriesLength", len(queries), "stage", stagePrepareRequest, "runInParallel", runInParallel)
 
-	ctx, span := tracer.Start(ctx, "datasource.loki.queryData.runQueries", trace.WithAttributes(
+	ctx, span := tracer.Start(ctx, "datasources.loki.queryData.runQueries", trace.WithAttributes(
 		attribute.Bool("runInParallel", runInParallel),
 		attribute.Int("queriesLength", len(queries)),
 	))
@@ -224,7 +224,7 @@ func queryData(ctx context.Context, req *backend.QueryDataRequest, dsInfo *datas
 }
 
 func executeQuery(ctx context.Context, query *lokiQuery, req *backend.QueryDataRequest, runInParallel bool, api *LokiAPI, responseOpts ResponseOpts, tracer tracing.Tracer, plog log.Logger) backend.DataResponse {
-	ctx, span := tracer.Start(ctx, "datasource.loki.queryData.runQueries.runQuery", trace.WithAttributes(
+	ctx, span := tracer.Start(ctx, "datasources.loki.queryData.runQueries.runQuery", trace.WithAttributes(
 		attribute.Bool("runInParallel", runInParallel),
 		attribute.String("expr", query.Expr),
 		attribute.Int64("start_unixnano", query.Start.UnixNano()),

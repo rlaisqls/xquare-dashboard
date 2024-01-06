@@ -15,12 +15,8 @@ import (
 
 	"github.com/grafana/grafana-plugin-sdk-go/data"
 	jsoniter "github.com/json-iterator/go"
-	"go.opentelemetry.io/otel/attribute"
-	"go.opentelemetry.io/otel/codes"
-	"go.opentelemetry.io/otel/trace"
 
 	"github.com/xquare-dashboard/pkg/infra/log"
-	"github.com/xquare-dashboard/pkg/infra/tracing"
 	"github.com/xquare-dashboard/pkg/tsdb/loki/instrumentation"
 	"github.com/xquare-dashboard/pkg/util/converter"
 )
@@ -29,7 +25,6 @@ type LokiAPI struct {
 	client                    *http.Client
 	url                       string
 	log                       log.Logger
-	tracer                    tracing.Tracer
 	requestStructuredMetadata bool
 }
 
@@ -39,8 +34,8 @@ type RawLokiResponse struct {
 	Encoding string
 }
 
-func newLokiAPI(client *http.Client, url string, log log.Logger, tracer tracing.Tracer, requestStructuredMetadata bool) *LokiAPI {
-	return &LokiAPI{client: client, url: url, log: log, tracer: tracer, requestStructuredMetadata: requestStructuredMetadata}
+func newLokiAPI(client *http.Client, url string, log log.Logger, requestStructuredMetadata bool) *LokiAPI {
+	return &LokiAPI{client: client, url: url, log: log, requestStructuredMetadata: requestStructuredMetadata}
 }
 
 func makeDataRequest(ctx context.Context, lokiDsUrl string, query lokiQuery, categorizeLabels bool) (*http.Request, error) {
@@ -202,18 +197,10 @@ func (api *LokiAPI) DataQuery(ctx context.Context, query lokiQuery, responseOpts
 		api.log.Info("Response received from loki", lp...)
 	}
 
-	start = time.Now()
-	_, span := api.tracer.Start(ctx, "datasource.loki.parseResponse", trace.WithAttributes(
-		attribute.Bool("metricDataplane", responseOpts.metricDataplane),
-	))
-	defer span.End()
-
 	iter := jsoniter.Parse(jsoniter.ConfigDefault, resp.Body, 1024)
 	res := converter.ReadPrometheusStyleResult(iter, converter.Options{Dataplane: responseOpts.metricDataplane})
 
 	if res.Error != nil {
-		span.RecordError(res.Error)
-		span.SetStatus(codes.Error, res.Error.Error())
 		instrumentation.UpdatePluginParsingResponseDurationSeconds(ctx, time.Since(start), "error")
 		api.log.Error("Error parsing response from loki", "error", res.Error, "metricDataplane", responseOpts.metricDataplane, "duration", time.Since(start), "stage", stageParseResponse)
 		return nil, res.Error
@@ -293,10 +280,6 @@ func (api *LokiAPI) RawQuery(ctx context.Context, resourcePath string) (RawLokiR
 	if resp.StatusCode/100 != 2 {
 		lokiResponseErr := lokiResponseError{Message: makeLokiError(body).Error()}
 		api.log.Warn("Non 200 HTTP status received from loki", "error", lokiResponseErr.Message, "statusCode", resp.StatusCode, "resourcePath", resourcePath)
-		traceID := tracing.TraceIDFromContext(ctx, false)
-		if traceID != "" {
-			lokiResponseErr.TraceID = traceID
-		}
 		body, err = json.Marshal(lokiResponseErr)
 		if err != nil {
 			return RawLokiResponse{}, err

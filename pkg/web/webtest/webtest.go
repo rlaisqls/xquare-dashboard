@@ -13,6 +13,7 @@ import (
 	"github.com/xquare-dashboard/pkg/infra/log"
 	"github.com/xquare-dashboard/pkg/services/contexthandler/ctxkey"
 	contextmodel "github.com/xquare-dashboard/pkg/services/contexthandler/model"
+	"github.com/xquare-dashboard/pkg/services/user"
 	"github.com/xquare-dashboard/pkg/web"
 )
 
@@ -110,9 +111,10 @@ func RequestWithWebContext(req *http.Request, c *contextmodel.ReqContext) *http.
 	return req
 }
 
-func RequestWithSignedInUser(req *http.Request) *http.Request {
+func RequestWithSignedInUser(req *http.Request, usr *user.SignedInUser) *http.Request {
 	return RequestWithWebContext(req, &contextmodel.ReqContext{
-		IsSignedIn: true,
+		SignedInUser: usr,
+		IsSignedIn:   true,
 	})
 }
 

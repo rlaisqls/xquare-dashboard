@@ -212,7 +212,7 @@ func (s *QueryData) exemplarQuery(ctx context.Context, c *client.Client, q *mode
 }
 
 func (s *QueryData) trace(ctx context.Context, q *models.Query) (context.Context, func()) {
-	return utils.StartTrace(ctx, s.tracer, "datasource.prometheus",
+	return utils.StartTrace(ctx, s.tracer, "datasources.prometheus",
 		attribute.String("expr", q.Expr),
 		attribute.Int64("start_unixnano", q.Start.UnixNano()),
 		attribute.Int64("stop_unixnano", q.End.UnixNano()),
