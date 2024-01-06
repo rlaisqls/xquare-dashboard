@@ -51,3 +51,5 @@ func (ctx *ReqContext) writeErrOrFallback(status int, message string, err error)
 
 	ctx.JSON(statusResponse, data)
 }
+<<<<<<< HEAD
+=======

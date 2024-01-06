@@ -27,7 +27,7 @@ func find(dir string, name string) ([]string, error) {
 }
 
 func findPluginJSONDir(pluginDir string) (string, error) {
-	pluginJSONMatches, err := find(filepath.Join("../../public/app/plugins/datasources", pluginDir), "plugin.json")
+	pluginJSONMatches, err := find(filepath.Join("../../public/app/plugins/datasource", pluginDir), "plugin.json")
 	if err != nil {
 		return "", err
 	}

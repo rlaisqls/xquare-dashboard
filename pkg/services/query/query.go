@@ -14,6 +14,7 @@ import (
 	"github.com/xquare-dashboard/pkg/util/errutil"
 	"golang.org/x/sync/errgroup"
 	"net/http"
+	"runtime"
 	"slices"
 	"time"
 )
@@ -26,6 +27,16 @@ const (
 	HeaderQueryGroupID   = "X-Query-Group-Id"     // mainly useful for finding related queries with query chunking
 	HeaderFromExpression = "X-Grafana-From-Expr"  // used by datasources to identify expression queries
 )
+
+func ProvideService(expressionService *expr.Service) *ServiceImpl {
+	g := &ServiceImpl{
+		expressionService:    expressionService,
+		log:                  log.New("query_data"),
+		concurrentQueryLimit: runtime.NumCPU(),
+	}
+	g.log.Info("Query Service initialization")
+	return g
+}
 
 type Service interface {
 	Run(ctx context.Context) error

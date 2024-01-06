@@ -1,10 +1,9 @@
 package legacydata
 
 import (
+	"github.com/timberio/go-datemath"
 	"strconv"
 	"time"
-
-	"github.com/vectordotdev/go-datemath"
 )
 
 type DataTimeRange struct {
@@ -152,24 +151,12 @@ func (t parsableTime) Parse() (time.Time, error) {
 func (t parsableTime) datemathOptions() []func(*datemath.Options) {
 	options := []func(*datemath.Options){
 		datemath.WithNow(t.now),
-		datemath.WithRoundUp(t.roundUp),
 	}
 	if t.location != nil {
 		options = append(options, datemath.WithLocation(t.location))
 	}
 	if t.weekstart != nil {
 		options = append(options, datemath.WithStartOfWeek(*t.weekstart))
-	}
-	if t.fiscalStartMonth != nil {
-		loc := time.UTC
-		if t.location != nil {
-			loc = t.location
-		}
-		options = append(options, datemath.WithStartOfFiscalYear(
-			// Year doesn't matter, and Grafana only supports setting the
-			// month that the fiscal year starts in.
-			time.Date(0, *t.fiscalStartMonth, 1, 0, 0, 0, 0, loc),
-		))
 	}
 	return options
 }

@@ -15,8 +15,13 @@ import (
 
 	"github.com/grafana/grafana-plugin-sdk-go/data"
 	jsoniter "github.com/json-iterator/go"
+	"github.com/xquare-dashboard/pkg/infra/log"
+	"go.opentelemetry.io/otel/attribute"
+	"go.opentelemetry.io/otel/codes"
+	"go.opentelemetry.io/otel/trace"
 
 	"github.com/xquare-dashboard/pkg/infra/log"
+	"github.com/xquare-dashboard/pkg/infra/tracing"
 	"github.com/xquare-dashboard/pkg/tsdb/loki/instrumentation"
 	"github.com/xquare-dashboard/pkg/util/converter"
 )
