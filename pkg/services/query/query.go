@@ -10,7 +10,6 @@ import (
 	"github.com/xquare-dashboard/pkg/infra/log"
 	"github.com/xquare-dashboard/pkg/services/contexthandler"
 	"github.com/xquare-dashboard/pkg/services/datasources"
-	"github.com/xquare-dashboard/pkg/tsdb/legacydata"
 	"github.com/xquare-dashboard/pkg/util/errutil"
 	"golang.org/x/sync/errgroup"
 	"net/http"
@@ -212,7 +211,7 @@ func (s *ServiceImpl) parseMetricRequest(ctx context.Context, reqDTO dtos.Metric
 		return nil, ErrNoQueriesFound
 	}
 
-	timeRange := legacydata.NewDataTimeRange(reqDTO.From, reqDTO.To)
+	timeRange := newDataTimeRange(reqDTO.From, reqDTO.To)
 	req := &parsedRequest{
 		hasExpression: false,
 		parsedQueries: make(map[datasources.DataSourceType][]parsedQuery),
@@ -260,6 +259,14 @@ func (s *ServiceImpl) parseMetricRequest(ctx context.Context, reqDTO dtos.Metric
 	}
 
 	return req, req.validateRequest(ctx)
+}
+
+func newDataTimeRange(from, to string) DataTimeRange {
+	return DataTimeRange{
+		From: from,
+		To:   to,
+		Now:  time.Now(),
+	}
 }
 
 func (s *ServiceImpl) getDataSourceFromQuery(query *simplejson.Json) (*datasources.DataSource, error) {

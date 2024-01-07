@@ -38,3 +38,12 @@ func TestQueryBoolWithDefault(t *testing.T) {
 		})
 	}
 }
+
+func (ctx *ReqContext) QueryBoolWithDefault(field string, d bool) bool {
+	f := ctx.Query(field)
+	if f == "" {
+		return d
+	}
+
+	return ctx.QueryBool(field)
+}

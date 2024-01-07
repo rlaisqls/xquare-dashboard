@@ -6,7 +6,6 @@ import (
 	"time"
 
 	"github.com/stretchr/testify/require"
-	"github.com/xquare-dashboard/pkg/infra/tracing"
 )
 
 func TestAbsFunc(t *testing.T) {
@@ -74,7 +73,7 @@ func TestAbsFunc(t *testing.T) {
 			e, err := New(tt.expr)
 			tt.newErrIs(t, err)
 			if e != nil {
-				res, err := e.Execute("", tt.vars, tracing.InitializeTracerForTest())
+				res, err := e.Execute("", tt.vars)
 				tt.execErrIs(t, err)
 				tt.resultIs(t, tt.results, res)
 			}
@@ -133,7 +132,7 @@ func TestIsNumberFunc(t *testing.T) {
 			e, err := New(tt.expr)
 			require.NoError(t, err)
 			if e != nil {
-				res, err := e.Execute("", tt.vars, tracing.InitializeTracerForTest())
+				res, err := e.Execute("", tt.vars)
 				require.NoError(t, err)
 				require.Equal(t, tt.results, res)
 			}

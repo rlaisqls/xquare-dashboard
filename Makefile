@@ -5,6 +5,7 @@
 WIRE_TAGS = "oss"
 
 -include local/Makefile
+include .bingo/Variables.mk
 
 GO = go
 GO_FILES ?= ./pkg/...
@@ -19,7 +20,7 @@ $(NGALERT_SPEC_TARGET):
 
 gen-go: $(WIRE)
 	@echo "generate go files"
-	/Users/rlaisqls/go/bin/wire-v0.5.0 gen -tags $(WIRE_TAGS) ./pkg/server
+	$(WIRE) gen -tags $(WIRE_TAGS) ./pkg/server
 
 build: ## Build all Go binaries.
 	@echo "build go files"

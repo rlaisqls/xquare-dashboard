@@ -6,7 +6,6 @@ import (
 	"net/http"
 
 	"github.com/xquare-dashboard/pkg/infra/log"
-	"github.com/xquare-dashboard/pkg/infra/tracing"
 )
 
 type mockRequestCallback func(req *http.Request)
@@ -65,7 +64,7 @@ func makeMockedAPIWithUrl(url string, statusCode int, contentType string, respon
 		Transport: &mockedRoundTripper{statusCode: statusCode, contentType: contentType, responseBytes: responseBytes, requestCallback: requestCallback},
 	}
 
-	return newLokiAPI(&client, url, log.New("test"), tracing.InitializeTracerForTest(), structuredMetadata)
+	return newLokiAPI(&client, url, log.New("test"), structuredMetadata)
 }
 
 func makeCompressedMockedAPIWithUrl(url string, statusCode int, contentType string, responseBytes []byte, requestCallback mockRequestCallback) *LokiAPI {
@@ -73,5 +72,5 @@ func makeCompressedMockedAPIWithUrl(url string, statusCode int, contentType stri
 		Transport: &mockedCompressedRoundTripper{statusCode: statusCode, contentType: contentType, responseBytes: responseBytes, requestCallback: requestCallback},
 	}
 
-	return newLokiAPI(&client, url, log.New("test"), tracing.InitializeTracerForTest(), false)
+	return newLokiAPI(&client, url, log.New("test"), false)
 }

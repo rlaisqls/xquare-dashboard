@@ -16,12 +16,6 @@ import (
 	"github.com/grafana/grafana-plugin-sdk-go/data"
 	jsoniter "github.com/json-iterator/go"
 	"github.com/xquare-dashboard/pkg/infra/log"
-	"go.opentelemetry.io/otel/attribute"
-	"go.opentelemetry.io/otel/codes"
-	"go.opentelemetry.io/otel/trace"
-
-	"github.com/xquare-dashboard/pkg/infra/log"
-	"github.com/xquare-dashboard/pkg/infra/tracing"
 	"github.com/xquare-dashboard/pkg/tsdb/loki/instrumentation"
 	"github.com/xquare-dashboard/pkg/util/converter"
 )
@@ -46,7 +40,6 @@ func newLokiAPI(client *http.Client, url string, log log.Logger, requestStructur
 func makeDataRequest(ctx context.Context, lokiDsUrl string, query lokiQuery, categorizeLabels bool) (*http.Request, error) {
 	qs := url.Values{}
 	qs.Set("query", query.Expr)
-
 	qs.Set("direction", string(query.Direction))
 
 	// MaxLines defaults to zero when not received,

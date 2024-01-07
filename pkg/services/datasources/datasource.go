@@ -15,12 +15,12 @@ const (
 
 var Loki = DataSource{
 	Type: LokiType,
-	URL:  "",
+	URL:  "http://loki.xquare.app",
 }
 
 var Prometheus = DataSource{
-	Type: LokiType,
-	URL:  "",
+	Type: PrometheusType,
+	URL:  "http://prometheus.xquare.app",
 }
 
 func GetDataSource(dsType DataSourceType) (*DataSource, error) {

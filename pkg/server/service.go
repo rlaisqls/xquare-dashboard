@@ -2,7 +2,6 @@ package server
 
 import (
 	"context"
-
 	"github.com/grafana/dskit/services"
 )
 

@@ -27,9 +27,9 @@ type Options struct {
 }
 
 // New returns a new instance of Server.
-func New(promReg prometheus.Registerer) (*Server, error) {
+func New(promReg prometheus.Registerer, backgroundServiceProvider registry.BackgroundServiceRegistry) (*Server, error) {
 
-	s, err := newServer(promReg)
+	s, err := newServer(promReg, backgroundServiceProvider)
 	if err != nil {
 		return nil, err
 	}
@@ -41,17 +41,18 @@ func New(promReg prometheus.Registerer) (*Server, error) {
 	return s, nil
 }
 
-func newServer(promReg prometheus.Registerer) (*Server, error) {
+func newServer(promReg prometheus.Registerer, backgroundServiceProvider registry.BackgroundServiceRegistry) (*Server, error) {
 	rootCtx, shutdownFn := context.WithCancel(context.Background())
 	childRoutines, childCtx := errgroup.WithContext(rootCtx)
 
 	s := &Server{
-		promReg:          promReg,
-		context:          childCtx,
-		childRoutines:    childRoutines,
-		shutdownFn:       shutdownFn,
-		shutdownFinished: make(chan struct{}),
-		log:              log.New("server"),
+		promReg:            promReg,
+		context:            childCtx,
+		childRoutines:      childRoutines,
+		shutdownFn:         shutdownFn,
+		shutdownFinished:   make(chan struct{}),
+		log:                log.New("server"),
+		backgroundServices: backgroundServiceProvider.GetServices(),
 	}
 
 	return s, nil

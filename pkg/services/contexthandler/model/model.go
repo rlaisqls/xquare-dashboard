@@ -9,6 +9,7 @@ import (
 type ReqContext struct {
 	*web.Context
 	Logger log.Logger
+	Error  error
 }
 
 // WriteErr writes an error response based on errutil.Error.
@@ -51,5 +52,3 @@ func (ctx *ReqContext) writeErrOrFallback(status int, message string, err error)
 
 	ctx.JSON(statusResponse, data)
 }
-<<<<<<< HEAD
-=======

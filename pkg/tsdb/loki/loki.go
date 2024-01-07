@@ -15,13 +15,9 @@ import (
 	"github.com/grafana/grafana-plugin-sdk-go/backend/datasource"
 	"github.com/grafana/grafana-plugin-sdk-go/backend/instancemgmt"
 	"github.com/grafana/grafana-plugin-sdk-go/data"
-	"go.opentelemetry.io/otel/attribute"
-	"go.opentelemetry.io/otel/codes"
-	"go.opentelemetry.io/otel/trace"
 
 	"github.com/xquare-dashboard/pkg/infra/httpclient"
 	"github.com/xquare-dashboard/pkg/infra/log"
-	"github.com/xquare-dashboard/pkg/infra/tracing"
 	"github.com/xquare-dashboard/pkg/tsdb/loki/kinds/dataquery"
 )
 
@@ -29,7 +25,6 @@ var logger = log.New("tsdb.loki")
 
 type Service struct {
 	im     instancemgmt.InstanceManager
-	tracer tracing.Tracer
 	logger *log.ConcreteLogger
 }
 
@@ -39,10 +34,9 @@ var (
 	_ backend.CallResourceHandler = (*Service)(nil)
 )
 
-func ProvideService(httpClientProvider httpclient.Provider, tracer tracing.Tracer) *Service {
+func ProvideService(httpClientProvider httpclient.Provider) *Service {
 	return &Service{
 		im:     datasource.NewInstanceManager(newInstanceSettings(httpClientProvider)),
-		tracer: tracer,
 		logger: logger,
 	}
 }
@@ -112,10 +106,10 @@ func (s *Service) CallResource(ctx context.Context, req *backend.CallResourceReq
 		logger.Error("Failed to get data source info", "error", err)
 		return err
 	}
-	return callResource(ctx, req, sender, dsInfo, logger, s.tracer)
+	return callResource(ctx, req, sender, dsInfo, logger)
 }
 
-func callResource(ctx context.Context, req *backend.CallResourceRequest, sender backend.CallResourceResponseSender, dsInfo *datasourceInfo, plog log.Logger, tracer tracing.Tracer) error {
+func callResource(ctx context.Context, req *backend.CallResourceRequest, sender backend.CallResourceResponseSender, dsInfo *datasourceInfo, plog log.Logger) error {
 	url := req.URL
 	// a very basic is-this-url-valid check
 	if req.Method != "GET" {
@@ -131,17 +125,10 @@ func callResource(ctx context.Context, req *backend.CallResourceRequest, sender 
 	}
 	lokiURL := fmt.Sprintf("/loki/api/v1/%s", url)
 
-	ctx, span := tracer.Start(ctx, "datasources.loki.CallResource", trace.WithAttributes(
-		attribute.String("url", lokiURL),
-	))
-	defer span.End()
-
-	api := newLokiAPI(dsInfo.HTTPClient, dsInfo.URL, plog, tracer, false)
+	api := newLokiAPI(dsInfo.HTTPClient, dsInfo.URL, plog, false)
 
 	rawLokiResponse, err := api.RawQuery(ctx, lokiURL)
 	if err != nil {
-		span.RecordError(err)
-		span.SetStatus(codes.Error, err.Error())
 		plog.Error("Failed resource call from loki", "err", err, "url", lokiURL)
 		return err
 	}
@@ -171,16 +158,16 @@ func (s *Service) QueryData(ctx context.Context, req *backend.QueryDataRequest) 
 		logsDataplane:   true,
 	}
 
-	return queryData(ctx, req, dsInfo, responseOpts, s.tracer, logger, true, false)
+	return queryData(ctx, req, dsInfo, responseOpts, logger, true, false)
 }
 
 func queryData(
 	ctx context.Context, req *backend.QueryDataRequest, dsInfo *datasourceInfo, responseOpts ResponseOpts,
-	tracer tracing.Tracer, plog log.Logger, runInParallel bool, requestStructuredMetadata bool,
+	plog log.Logger, runInParallel bool, requestStructuredMetadata bool,
 ) (*backend.QueryDataResponse, error) {
 	result := backend.NewQueryDataResponse()
 
-	api := newLokiAPI(dsInfo.HTTPClient, dsInfo.URL, plog, tracer, requestStructuredMetadata)
+	api := newLokiAPI(dsInfo.HTTPClient, dsInfo.URL, plog, requestStructuredMetadata)
 
 	start := time.Now()
 	queries, err := parseQuery(req)
@@ -191,22 +178,12 @@ func queryData(
 
 	plog.Info("Prepared request to Loki", "duration", time.Since(start), "queriesLength", len(queries), "stage", stagePrepareRequest, "runInParallel", runInParallel)
 
-	ctx, span := tracer.Start(ctx, "datasources.loki.queryData.runQueries", trace.WithAttributes(
-		attribute.Bool("runInParallel", runInParallel),
-		attribute.Int("queriesLength", len(queries)),
-	))
-	if req.GetHTTPHeader("X-Query-Group-Id") != "" {
-		span.SetAttributes(attribute.String("query_group_id", req.GetHTTPHeader("X-Query-Group-Id")))
-	}
-	defer span.End()
-	start = time.Now()
-
 	// We are testing running of queries in parallel behind feature flag
 	if runInParallel {
 		resultLock := sync.Mutex{}
 		err = concurrency.ForEachJob(ctx, len(queries), 10, func(ctx context.Context, idx int) error {
 			query := queries[idx]
-			queryRes := executeQuery(ctx, query, req, runInParallel, api, responseOpts, tracer, plog)
+			queryRes := executeQuery(ctx, query, api, responseOpts, plog)
 
 			resultLock.Lock()
 			defer resultLock.Unlock()
@@ -215,7 +192,7 @@ func queryData(
 		})
 	} else {
 		for _, query := range queries {
-			queryRes := executeQuery(ctx, query, req, runInParallel, api, responseOpts, tracer, plog)
+			queryRes := executeQuery(ctx, query, api, responseOpts, plog)
 			result.Responses[query.RefID] = queryRes
 		}
 	}
@@ -223,24 +200,11 @@ func queryData(
 	return result, err
 }
 
-func executeQuery(ctx context.Context, query *lokiQuery, req *backend.QueryDataRequest, runInParallel bool, api *LokiAPI, responseOpts ResponseOpts, tracer tracing.Tracer, plog log.Logger) backend.DataResponse {
-	ctx, span := tracer.Start(ctx, "datasources.loki.queryData.runQueries.runQuery", trace.WithAttributes(
-		attribute.Bool("runInParallel", runInParallel),
-		attribute.String("expr", query.Expr),
-		attribute.Int64("start_unixnano", query.Start.UnixNano()),
-		attribute.Int64("stop_unixnano", query.End.UnixNano()),
-	))
-	if req.GetHTTPHeader("X-Query-Group-Id") != "" {
-		span.SetAttributes(attribute.String("query_group_id", req.GetHTTPHeader("X-Query-Group-Id")))
-	}
-
-	defer span.End()
+func executeQuery(ctx context.Context, query *lokiQuery, api *LokiAPI, responseOpts ResponseOpts, plog log.Logger) backend.DataResponse {
 
 	frames, err := runQuery(ctx, api, query, responseOpts, plog)
 	queryRes := backend.DataResponse{}
 	if err != nil {
-		span.RecordError(err)
-		span.SetStatus(codes.Error, err.Error())
 		queryRes.Error = err
 	} else {
 		queryRes.Frames = frames

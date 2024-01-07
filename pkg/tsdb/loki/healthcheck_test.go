@@ -14,8 +14,6 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/xquare-dashboard/pkg/infra/httpclient"
 	"github.com/xquare-dashboard/pkg/infra/log"
-	"github.com/xquare-dashboard/pkg/infra/tracing"
-	"github.com/xquare-dashboard/pkg/services/featuremgmt"
 )
 
 type healthCheckProvider[T http.RoundTripper] struct {
@@ -85,10 +83,8 @@ func Test_healthcheck(t *testing.T) {
 	t.Run("should do a successful health check", func(t *testing.T) {
 		httpProvider := getMockProvider[*healthCheckSuccessRoundTripper]()
 		s := &Service{
-			im:       datasource.NewInstanceManager(newInstanceSettings(httpProvider)),
-			features: featuremgmt.WithFeatures(featuremgmt.FlagLokiLogsDataplane, featuremgmt.FlagLokiMetricDataplane),
-			tracer:   tracing.InitializeTracerForTest(),
-			logger:   log.New("loki test"),
+			im:     datasource.NewInstanceManager(newInstanceSettings(httpProvider)),
+			logger: log.New("loki test"),
 		}
 
 		req := &backend.CheckHealthRequest{
@@ -104,10 +100,8 @@ func Test_healthcheck(t *testing.T) {
 	t.Run("should return an error for an unsuccessful health check", func(t *testing.T) {
 		httpProvider := getMockProvider[*healthCheckFailRoundTripper]()
 		s := &Service{
-			im:       datasource.NewInstanceManager(newInstanceSettings(httpProvider)),
-			features: featuremgmt.WithFeatures(featuremgmt.FlagLokiLogsDataplane, featuremgmt.FlagLokiMetricDataplane),
-			tracer:   tracing.InitializeTracerForTest(),
-			logger:   log.New("loki test"),
+			im:     datasource.NewInstanceManager(newInstanceSettings(httpProvider)),
+			logger: log.New("loki test"),
 		}
 
 		req := &backend.CheckHealthRequest{

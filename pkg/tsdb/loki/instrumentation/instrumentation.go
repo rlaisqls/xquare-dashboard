@@ -6,7 +6,6 @@ import (
 
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promauto"
-	"github.com/xquare-dashboard/pkg/infra/tracing"
 )
 
 var (
@@ -24,10 +23,5 @@ const (
 
 func UpdatePluginParsingResponseDurationSeconds(ctx context.Context, duration time.Duration, status string) {
 	histogram := pluginParsingResponseDurationSeconds.WithLabelValues(status, EndpointQueryData)
-
-	if traceID := tracing.TraceIDFromContext(ctx, true); traceID != "" {
-		histogram.(prometheus.ExemplarObserver).ObserveWithExemplar(duration.Seconds(), prometheus.Labels{"traceID": traceID})
-	} else {
-		histogram.Observe(duration.Seconds())
-	}
+	histogram.Observe(duration.Seconds())
 }

@@ -12,7 +12,6 @@ import (
 	jsoniter "github.com/json-iterator/go"
 	"gopkg.in/yaml.v3"
 
-	"github.com/xquare-dashboard/pkg/infra/tracing"
 	"github.com/xquare-dashboard/pkg/middleware/requestmeta"
 	contextmodel "github.com/xquare-dashboard/pkg/services/contexthandler/model"
 	"github.com/xquare-dashboard/pkg/util/errutil"
@@ -108,9 +107,8 @@ func (r *NormalResponse) WriteTo(ctx *contextmodel.ReqContext) {
 
 func (r *NormalResponse) writeLogLine(c *contextmodel.ReqContext) {
 	v := map[string]any{}
-	traceID := tracing.TraceIDFromContext(c.Req.Context(), false)
+
 	if err := json.Unmarshal(r.body.Bytes(), &v); err == nil {
-		v["traceID"] = traceID
 		if b, err := json.Marshal(v); err == nil {
 			r.body = bytes.NewBuffer(b)
 		}
@@ -121,7 +119,7 @@ func (r *NormalResponse) writeLogLine(c *contextmodel.ReqContext) {
 	if errors.As(r.err, &gfErr) {
 		logger = gfErr.LogLevel.LogFunc(c.Logger)
 	}
-	logger(r.errMessage, "error", r.err, "remote_addr", c.RemoteAddr(), "traceID", traceID)
+	logger(r.errMessage, "error", r.err, "remote_addr", c.RemoteAddr())
 }
 
 func (r *NormalResponse) SetHeader(key, value string) *NormalResponse {

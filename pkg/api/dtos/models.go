@@ -1,17 +1,9 @@
 package dtos
 
 import (
-	"crypto/md5"
-	"fmt"
-	"regexp"
-	"strings"
-
 	"github.com/xquare-dashboard/pkg/components/simplejson"
 	"github.com/xquare-dashboard/pkg/infra/log"
-	"github.com/xquare-dashboard/pkg/services/auth/identity"
-	"github.com/xquare-dashboard/pkg/services/org"
-	"github.com/xquare-dashboard/pkg/services/user"
-	"github.com/xquare-dashboard/pkg/setting"
+	"regexp"
 )
 
 var regNonAlphaNumeric = regexp.MustCompile("[^a-zA-Z0-9]+")
@@ -19,37 +11,6 @@ var mlog = log.New("models")
 
 type AnyId struct {
 	Id int64 `json:"id"`
-}
-
-type LoginCommand struct {
-	User     string `json:"user" binding:"Required"`
-	Password string `json:"password" binding:"Required"`
-	Remember bool   `json:"remember"`
-}
-
-type CurrentUser struct {
-	IsSignedIn                 bool               `json:"isSignedIn"`
-	Id                         int64              `json:"id"`
-	Login                      string             `json:"login"`
-	Email                      string             `json:"email"`
-	Name                       string             `json:"name"`
-	Theme                      string             `json:"theme"`
-	LightTheme                 bool               `json:"lightTheme"` // deprecated, use theme instead
-	OrgCount                   int                `json:"orgCount"`
-	OrgId                      int64              `json:"orgId"`
-	OrgName                    string             `json:"orgName"`
-	OrgRole                    org.RoleType       `json:"orgRole"`
-	IsGrafanaAdmin             bool               `json:"isGrafanaAdmin"`
-	GravatarUrl                string             `json:"gravatarUrl"`
-	Timezone                   string             `json:"timezone"`
-	WeekStart                  string             `json:"weekStart"`
-	Locale                     string             `json:"locale"`
-	Language                   string             `json:"language"`
-	HelpFlags1                 user.HelpFlags1    `json:"helpFlags1"`
-	HasEditPermissionInFolders bool               `json:"hasEditPermissionInFolders"`
-	AuthenticatedBy            string             `json:"authenticatedBy"`
-	Permissions                UserPermissionsMap `json:"permissions,omitempty"`
-	Analytics                  AnalyticsSettings  `json:"analytics"`
 }
 
 type AnalyticsSettings struct {
@@ -106,51 +67,4 @@ func (mr *MetricRequest) CloneWithQueries(queries []*simplejson.Json) MetricRequ
 		Queries: queries,
 		Debug:   mr.Debug,
 	}
-}
-
-func GetGravatarUrl(text string) string {
-	if setting.DisableGravatar {
-		return setting.AppSubUrl + "/public/img/user_profile.png"
-	}
-
-	if text == "" {
-		return ""
-	}
-
-	hash, _ := GetGravatarHash(text)
-	return fmt.Sprintf(setting.AppSubUrl+"/avatar/%x", hash)
-}
-
-func GetGravatarHash(text string) ([]byte, bool) {
-	if text == "" {
-		return make([]byte, 0), false
-	}
-
-	hasher := md5.New()
-	if _, err := hasher.Write([]byte(strings.ToLower(text))); err != nil {
-		mlog.Warn("Failed to hash text", "err", err)
-	}
-	return hasher.Sum(nil), true
-}
-
-func GetGravatarUrlWithDefault(text string, defaultText string) string {
-	if text != "" {
-		return GetGravatarUrl(text)
-	}
-
-	text = regNonAlphaNumeric.ReplaceAllString(defaultText, "") + "@localhost"
-
-	return GetGravatarUrl(text)
-}
-
-func IsHiddenUser(userLogin string, signedInUser identity.Requester, cfg *setting.Cfg) bool {
-	if userLogin == "" || signedInUser.GetIsGrafanaAdmin() || userLogin == signedInUser.GetLogin() {
-		return false
-	}
-
-	if _, hidden := cfg.HiddenUsers[userLogin]; hidden {
-		return true
-	}
-
-	return false
 }

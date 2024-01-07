@@ -40,17 +40,12 @@ type HTTPServer struct {
 	RouteRegister routing.RouteRegister
 
 	ContextHandler   *contexthandler.ContextHandler
-	Listener         net.Listener
 	queryDataService query.Service
 	promRegister     prometheus.Registerer
 	promGatherer     prometheus.Gatherer
 }
 
-type ServerOptions struct {
-	Listener net.Listener
-}
-
-func ProvideHTTPServer(opts ServerOptions, contextHandler *contexthandler.ContextHandler,
+func ProvideHTTPServer(contextHandler *contexthandler.ContextHandler,
 	queryDataService query.Service, promGatherer prometheus.Gatherer, promRegister prometheus.Registerer,
 ) (*HTTPServer, error) {
 	m := web.New()
@@ -59,13 +54,9 @@ func ProvideHTTPServer(opts ServerOptions, contextHandler *contexthandler.Contex
 		ContextHandler:   contextHandler,
 		log:              log.New("http.server"),
 		web:              m,
-		Listener:         opts.Listener,
 		queryDataService: queryDataService,
 		promRegister:     promRegister,
 		promGatherer:     promGatherer,
-	}
-	if hs.Listener != nil {
-		hs.log.Debug("Using provided listener")
 	}
 	return hs, nil
 }
@@ -123,16 +114,11 @@ func (hs *HTTPServer) Run(ctx context.Context) error {
 }
 
 func (hs *HTTPServer) getListener() (net.Listener, error) {
-	if hs.Listener != nil {
-		return hs.Listener, nil
-	}
-
 	listener, err := net.Listen("tcp", hs.httpSrv.Addr)
 	if err != nil {
 		return nil, fmt.Errorf("failed to open listener on address %s: %w", hs.httpSrv.Addr, err)
 	}
 	return listener, nil
-
 }
 
 func (hs *HTTPServer) selfSignedCert() ([]tls.Certificate, error) {

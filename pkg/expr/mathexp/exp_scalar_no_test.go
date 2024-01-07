@@ -5,7 +5,6 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
-	"github.com/xquare-dashboard/pkg/infra/tracing"
 )
 
 func TestScalarExpr(t *testing.T) {
@@ -79,7 +78,7 @@ func TestScalarExpr(t *testing.T) {
 			e, err := New(tt.expr)
 			tt.newErrIs(t, err)
 			if e != nil {
-				res, err := e.Execute("", tt.vars, tracing.InitializeTracerForTest())
+				res, err := e.Execute("", tt.vars)
 				tt.execErrIs(t, err)
 				tt.resultIs(t, tt.Results, res)
 			}
@@ -132,7 +131,7 @@ func TestNumberExpr(t *testing.T) {
 			e, err := New(tt.expr)
 			tt.newErrIs(t, err)
 			if e != nil {
-				res, err := e.Execute("", tt.vars, tracing.InitializeTracerForTest())
+				res, err := e.Execute("", tt.vars)
 				tt.execErrIs(t, err)
 				tt.resultIs(t, tt.results, res)
 			}
