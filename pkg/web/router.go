@@ -54,7 +54,6 @@ func newRouteMap() *routeMap {
 func (rm *routeMap) getLeaf(method, pattern string) *Leaf {
 	rm.lock.RLock()
 	defer rm.lock.RUnlock()
-
 	return rm.routes[method][pattern]
 }
 

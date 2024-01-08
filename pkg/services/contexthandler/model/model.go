@@ -52,3 +52,28 @@ func (ctx *ReqContext) writeErrOrFallback(status int, message string, err error)
 
 	ctx.JSON(statusResponse, data)
 }
+
+func (ctx *ReqContext) JsonApiErr(status int, message string, err error) {
+	resp := make(map[string]interface{})
+
+	if err != nil {
+		if status == http.StatusInternalServerError {
+			ctx.Logger.Error(message, "error", err)
+		} else {
+			ctx.Logger.Warn(message, "error", err)
+		}
+	}
+
+	switch status {
+	case http.StatusNotFound:
+		resp["message"] = "Not Found"
+	case http.StatusInternalServerError:
+		resp["message"] = "Internal Server Error"
+	}
+
+	if message != "" {
+		resp["message"] = message
+	}
+
+	ctx.JSON(status, resp)
+}

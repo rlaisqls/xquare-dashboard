@@ -11,12 +11,10 @@ type coreService struct {
 }
 
 func NewService() (*coreService, error) {
-	s := &coreService{}
-	s.BasicService = services.NewBasicService(s.start, s.running, s.stop)
-	return s, nil
+	return &coreService{}, nil
 }
 
-func (s *coreService) start(_ context.Context) error {
+func (s *coreService) Start() error {
 	serv, err := Initialize()
 	if err != nil {
 		return err
@@ -25,10 +23,10 @@ func (s *coreService) start(_ context.Context) error {
 	return s.server.Init()
 }
 
-func (s *coreService) running(_ context.Context) error {
+func (s *coreService) Running() error {
 	return s.server.Run()
 }
 
-func (s *coreService) stop(failureReason error) error {
+func (s *coreService) Stop(failureReason error) error {
 	return s.server.Shutdown(context.Background(), failureReason.Error())
 }

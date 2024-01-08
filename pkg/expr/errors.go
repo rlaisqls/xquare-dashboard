@@ -3,7 +3,6 @@ package expr
 import (
 	"errors"
 	"fmt"
-	"github.com/xquare-dashboard/pkg/services/datasources"
 	"github.com/xquare-dashboard/pkg/util/errutil"
 )
 
@@ -51,7 +50,7 @@ var QueryError = errutil.BadRequest("sse.dataQueryError").MustTemplate(
 		"failed to execute query [{{ .Public.refId }}]: {{ .Public.error }}",
 	))
 
-func MakeQueryError(refID string, datasourceType datasources.DataSourceType, err error) error {
+func MakeQueryError(refID string, datasourceType string, err error) error {
 	var pErr error
 	var utilErr errutil.Error
 	// See if this is grafana error, if so, grab public message

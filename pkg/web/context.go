@@ -16,18 +16,14 @@ package web
 
 import (
 	"encoding/json"
-	"errors"
-	"fmt"
+	"github.com/xquare-dashboard/pkg/util/errutil"
+	"github.com/xquare-dashboard/pkg/util/errutil/errhttp"
 	"html/template"
 	"net"
 	"net/http"
 	"net/url"
 	"strconv"
 	"strings"
-	"syscall"
-
-	"github.com/xquare-dashboard/pkg/util/errutil"
-	"github.com/xquare-dashboard/pkg/util/errutil/errhttp"
 )
 
 // Context represents the runtime context of current request of Macaron instance.
@@ -98,20 +94,7 @@ func RemoteAddr(req *http.Request) string {
 const (
 	headerContentType = "Content-Type"
 	contentTypeJSON   = "application/json; charset=UTF-8"
-	contentTypeHTML   = "text/html; charset=UTF-8"
 )
-
-// HTML renders the HTML with default template set.
-func (ctx *Context) HTML(status int, name string, data any) {
-	ctx.Resp.Header().Set(headerContentType, contentTypeHTML)
-	ctx.Resp.WriteHeader(status)
-	if err := ctx.template.ExecuteTemplate(ctx.Resp, name, data); err != nil {
-		if errors.Is(err, syscall.EPIPE) { // Client has stopped listening.
-			return
-		}
-		panic(fmt.Sprintf("Context.HTML - Error rendering template: %s. You may need to build frontend assets \n %s", name, err.Error()))
-	}
-}
 
 func (ctx *Context) JSON(status int, data any) {
 	ctx.Resp.Header().Set(headerContentType, contentTypeJSON)

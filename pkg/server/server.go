@@ -124,8 +124,7 @@ func (s *Server) Run() error {
 	}
 
 	s.notifySystemd("READY=1")
-
-	s.log.Debug("Waiting on services...")
+	s.log.Info("Waiting on services...")
 	return s.childRoutines.Wait()
 }
 

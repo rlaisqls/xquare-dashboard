@@ -18,7 +18,6 @@ package web
 import (
 	"context"
 	"net/http"
-	"strings"
 	_ "unsafe"
 )
 
@@ -57,8 +56,6 @@ func wrapHandler(h Handler) http.Handler {
 type Macaron struct {
 	// handlers    []http.Handler
 	mws []Middleware
-
-	urlPrefix string // For suburl support.
 	*Router
 }
 
@@ -159,11 +156,6 @@ func (m *Macaron) createContext(rw http.ResponseWriter, req *http.Request) *Cont
 // Useful if you want to control your own HTTP server.
 // Be aware that none of middleware will run without registering any router.
 func (m *Macaron) ServeHTTP(rw http.ResponseWriter, req *http.Request) {
-	req.URL.Path = strings.TrimPrefix(req.URL.Path, m.urlPrefix)
+	println("func (m *Macaron) ServeHTTP")
 	m.Router.ServeHTTP(rw, req)
-}
-
-// SetURLPrefix sets URL prefix of router layer, so that it support suburl.
-func (m *Macaron) SetURLPrefix(prefix string) {
-	m.urlPrefix = prefix
 }

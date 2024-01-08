@@ -1,17 +1,19 @@
-//go:build ignore
-// +build ignore
-
 package main
 
 import (
-	"log"
+	"github.com/xquare-dashboard/pkg/server"
 	"os"
-
-	"github.com/xquare-dashboard/pkg/build"
+	"os/signal"
+	"syscall"
 )
 
 func main() {
-	log.SetOutput(os.Stdout)
-	log.SetFlags(0)
-	os.Exit(build.RunCmd())
+	service, _ := server.NewService()
+	service.Start()
+	service.Running()
+
+	// Wait for the process to be shutdown.
+	sigs := make(chan os.Signal, 1)
+	signal.Notify(sigs, syscall.SIGINT, syscall.SIGTERM)
+	<-sigs
 }

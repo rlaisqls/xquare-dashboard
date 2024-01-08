@@ -2,3 +2,6 @@
 *.test
 *.out
 go.work
+
+# wire generated files
+**/wire_gen.go

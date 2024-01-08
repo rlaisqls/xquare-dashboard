@@ -1,3 +1,6 @@
+//go:build wireinject
+// +build wireinject
+
 // This file should contain wire sets used by both OSS and Enterprise builds.
 // Use wireext_oss.go and wireext_enterprise.go for sets that are specific to
 // the respective builds.
@@ -6,6 +9,7 @@ package server
 import (
 	"github.com/google/wire"
 	"github.com/xquare-dashboard/pkg/api"
+	"github.com/xquare-dashboard/pkg/api/routing"
 	"github.com/xquare-dashboard/pkg/expr"
 	"github.com/xquare-dashboard/pkg/infra/httpclient/httpclientprovider"
 	"github.com/xquare-dashboard/pkg/infra/metrics"
@@ -23,6 +27,8 @@ var wireSet = wire.NewSet(
 	api.ProvideHTTPServer,
 	query.ProvideService,
 	wire.Bind(new(query.Service), new(*query.ServiceImpl)),
+	routing.ProvideRegister,
+	wire.Bind(new(routing.RouteRegister), new(*routing.RouteRegisterImpl)),
 	httpclientprovider.New,
 	contexthandler.ProvideService,
 	loki.ProvideService,

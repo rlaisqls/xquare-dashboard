@@ -244,7 +244,7 @@ func executeDSNodesGrouped(ctx context.Context, now time.Time, vars mathexp.Vars
 			resp, err := s.dataService.QueryData(ctx, req)
 			if err != nil {
 				for _, dn := range nodeGroup {
-					vars[dn.refID] = mathexp.Results{Error: MakeQueryError(firstNode.refID, firstNode.datasource.Type, err)}
+					vars[dn.refID] = mathexp.Results{Error: MakeQueryError(firstNode.refID, string(firstNode.datasource.Type), err)}
 				}
 				instrument(err, "")
 				return
@@ -253,7 +253,7 @@ func executeDSNodesGrouped(ctx context.Context, now time.Time, vars mathexp.Vars
 			for _, dn := range nodeGroup {
 				dataFrames, err := getResponseFrame(resp, dn.refID)
 				if err != nil {
-					vars[dn.refID] = mathexp.Results{Error: MakeQueryError(dn.refID, dn.datasource.Type, err)}
+					vars[dn.refID] = mathexp.Results{Error: MakeQueryError(dn.refID, string(dn.datasource.Type), err)}
 					instrument(err, "")
 					return
 				}
@@ -304,12 +304,12 @@ func (dn *DSNode) Execute(ctx context.Context, now time.Time, _ mathexp.Vars, s 
 
 	resp, err := s.dataService.QueryData(ctx, req)
 	if err != nil {
-		return mathexp.Results{}, MakeQueryError(dn.refID, dn.datasource.Type, err)
+		return mathexp.Results{}, MakeQueryError(dn.refID, string(dn.datasource.Type), err)
 	}
 
 	dataFrames, err := getResponseFrame(resp, dn.refID)
 	if err != nil {
-		return mathexp.Results{}, MakeQueryError(dn.refID, dn.datasource.Type, err)
+		return mathexp.Results{}, MakeQueryError(dn.refID, string(dn.datasource.Type), err)
 	}
 
 	var result mathexp.Results

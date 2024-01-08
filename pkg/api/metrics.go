@@ -2,13 +2,11 @@ package api
 
 import (
 	"context"
-	"errors"
 	"github.com/grafana/grafana-plugin-sdk-go/backend"
 	"github.com/xquare-dashboard/pkg/api/dtos"
 	"github.com/xquare-dashboard/pkg/api/response"
 	"github.com/xquare-dashboard/pkg/middleware/requestmeta"
 	contextmodel "github.com/xquare-dashboard/pkg/services/contexthandler/model"
-	"github.com/xquare-dashboard/pkg/services/datasources"
 	"github.com/xquare-dashboard/pkg/web"
 	"net/http"
 )
@@ -42,11 +40,6 @@ func (hs *HTTPServer) QueryMetrics(c *contextmodel.ReqContext) response.Response
 }
 
 func (hs *HTTPServer) handleQueryMetricsError(err error) *response.NormalResponse {
-	if errors.Is(err, datasources.ErrDataSourceAccessDenied) {
-		return response.Error(http.StatusForbidden, "Access denied to data source", err)
-	} else if errors.Is(err, datasources.ErrDataSourceNotFound) {
-		return response.Error(http.StatusNotFound, "Data source not found", err)
-	}
 	return response.ErrOrFallback(http.StatusInternalServerError, "Query data error", err)
 }
 

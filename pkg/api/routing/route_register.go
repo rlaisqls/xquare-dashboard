@@ -1,6 +1,7 @@
 package routing
 
 import (
+	"github.com/xquare-dashboard/pkg/middleware"
 	"net/http"
 	"strings"
 
@@ -42,7 +43,7 @@ type RouteRegister interface {
 
 	// Register iterates over all routes added to the RouteRegister
 	// and add them to the `Router` pass as an parameter.
-	Register(Router)
+	Register(Router, ...RegisterNamedMiddleware)
 
 	// Reset resets the route register.
 	Reset()
@@ -51,7 +52,7 @@ type RouteRegister interface {
 type RegisterNamedMiddleware func(name string) web.Handler
 
 func ProvideRegister() *RouteRegisterImpl {
-	return NewRouteRegister()
+	return NewRouteRegister(middleware.ProvideRouteOperationName)
 }
 
 // NewRouteRegister creates a new RouteRegister with all middlewares sent as params
@@ -116,8 +117,12 @@ func (rr *RouteRegisterImpl) Group(pattern string, fn func(rr RouteRegister), ha
 	rr.groups = append(rr.groups, group)
 }
 
-func (rr *RouteRegisterImpl) Register(router Router) {
+func (rr *RouteRegisterImpl) Register(router Router, namedMiddlewares ...RegisterNamedMiddleware) {
 	for _, r := range rr.routes {
+		// Add global named middlewares
+		for i, m := range namedMiddlewares {
+			r.handlers = insertHandler(r.handlers, len(rr.namedMiddlewares)+i, m(r.pattern))
+		}
 
 		// GET requests have to be added to macaron routing using Get()
 		// Otherwise HEAD requests will not be allowed.
@@ -128,6 +133,19 @@ func (rr *RouteRegisterImpl) Register(router Router) {
 			router.Handle(r.method, r.pattern, r.handlers)
 		}
 	}
+
+	for _, g := range rr.groups {
+		g.Register(router, namedMiddlewares...)
+	}
+}
+
+func insertHandler(a []web.Handler, index int, value web.Handler) []web.Handler {
+	if len(a) == index {
+		return append(a, value)
+	}
+	a = append(a[:index+1], a[index:]...)
+	a[index] = value
+	return a
 }
 
 func (rr *RouteRegisterImpl) route(pattern, method string, handlers ...web.Handler) {
@@ -148,15 +166,7 @@ func (rr *RouteRegisterImpl) route(pattern, method string, handlers ...web.Handl
 		pattern:  fullPattern,
 		handlers: h,
 	})
-}
-
-func insertHandler(a []web.Handler, index int, value web.Handler) []web.Handler {
-	if len(a) == index {
-		return append(a, value)
-	}
-	a = append(a[:index+1], a[index:]...)
-	a[index] = value
-	return a
+	println(rr.routes[0].pattern)
 }
 
 func (rr *RouteRegisterImpl) Get(pattern string, handlers ...web.Handler) {

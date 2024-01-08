@@ -1,6 +1,8 @@
 package datasources
 
-import "github.com/xquare-dashboard/pkg/services/query"
+import (
+	"github.com/xquare-dashboard/pkg/util/errutil"
+)
 
 type DataSourceType string
 type DataSource struct {
@@ -29,6 +31,10 @@ func GetDataSource(dsType DataSourceType) (*DataSource, error) {
 	} else if dsType == PrometheusType {
 		return &Prometheus, nil
 	} else {
-		return nil, query.ErrInvalidDatasourceID
+		return nil, ErrInvalidDatasourceID
 	}
 }
+
+var (
+	ErrInvalidDatasourceID = errutil.BadRequest("query.invalidDatasourceId", errutil.WithPublicMessage("Query does not contain a valid data source identifier")).Errorf("invalid data source identifier")
+)

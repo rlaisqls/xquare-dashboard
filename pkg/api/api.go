@@ -31,15 +31,13 @@ package api
 
 import (
 	"github.com/xquare-dashboard/pkg/api/routing"
-	"github.com/xquare-dashboard/pkg/infra/log"
 	"github.com/xquare-dashboard/pkg/middleware/requestmeta"
 )
-
-var plog = log.New("api")
 
 // registerRoutes registers all API HTTP routes.
 func (hs *HTTPServer) registerRoutes() {
 	r := hs.RouteRegister
+	r.Post("/api/test", requestmeta.SetSLOGroup(requestmeta.SLOGroupHighSlow), routing.Wrap(hs.QueryMetrics))
 	r.Group("/api", func(apiRoute routing.RouteRegister) {
 		// metrics
 		// DataSource w/ expressions
