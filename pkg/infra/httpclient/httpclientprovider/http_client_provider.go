@@ -20,7 +20,7 @@ func New() *sdkhttpclient.Provider {
 		sdkhttpclient.ContextualMiddleware(),
 		sdkhttpclient.BasicAuthenticationMiddleware(),
 		sdkhttpclient.CustomHeadersMiddleware(),
-		ResponseLimitMiddleware(100),
+		ResponseLimitMiddleware(922337203685477580),
 	}
 
 	setDefaultTimeoutOptions()

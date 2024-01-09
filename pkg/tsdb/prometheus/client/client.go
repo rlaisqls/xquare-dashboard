@@ -107,7 +107,7 @@ func (c *Client) QueryResource(ctx context.Context, req *backend.CallResourceReq
 
 func (c *Client) createQueryRequest(ctx context.Context, endpoint string, qv map[string]string) (*http.Request, error) {
 	if strings.ToUpper(c.method) == http.MethodPost {
-		u, err := c.createUrl(endpoint, nil)
+		u, err := c.createUrl(endpoint, qv)
 		if err != nil {
 			return nil, err
 		}
