@@ -14,7 +14,7 @@ require (
 	github.com/grafana/dataplane/sdata v0.0.6
 	github.com/grafana/dskit v0.0.0-20231221015914-de83901bf4d6
 	github.com/grafana/grafana-aws-sdk v0.20.0
-	github.com/grafana/grafana-plugin-sdk-go v0.197.0
+	github.com/grafana/grafana-plugin-sdk-go v0.195.0
 	github.com/grafana/kindsys v0.0.0-20230926104744-988ea4c8a739
 	github.com/grpc-ecosystem/go-grpc-middleware v1.4.0
 	github.com/json-iterator/go v1.1.12
@@ -56,7 +56,7 @@ require (
 	github.com/elazarl/goproxy v0.0.0-20230731152917-f99041a5c027 // indirect
 	github.com/emicklei/proto v1.12.1 // indirect
 	github.com/fatih/color v1.15.0 // indirect
-	github.com/getkin/kin-openapi v0.120.0 // indirect
+	github.com/getkin/kin-openapi v0.122.0 // indirect
 	github.com/getsentry/sentry-go v0.22.0 // indirect
 	github.com/go-logfmt/logfmt v0.5.1 // indirect
 	github.com/go-logr/logr v1.3.0 // indirect

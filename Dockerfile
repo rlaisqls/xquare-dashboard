@@ -13,18 +13,15 @@ COPY .bingo .bingo
 COPY Makefile main.go ./
 COPY pkg pkg
 
+RUN go mod download
+
 # Install build dependencies
 RUN if grep -i -q alpine /etc/issue; then \
       apk add --no-cache gcc g++ make git; \
     fi
-
 RUN make gen
 
-RUN go mod tidy \
-    && go get -u -d -v ./...
 RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -a -ldflags '-s -w' -o project
-
-RUN make build
 
 FROM scratch
 COPY --from=builder /build/dashboard-tsdata-bridge /
