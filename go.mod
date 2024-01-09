@@ -14,7 +14,7 @@ require (
 	github.com/grafana/dataplane/sdata v0.0.6
 	github.com/grafana/dskit v0.0.0-20231221015914-de83901bf4d6
 	github.com/grafana/grafana-aws-sdk v0.20.0
-	github.com/grafana/grafana-plugin-sdk-go v0.198.0
+	github.com/grafana/grafana-plugin-sdk-go v0.197.0
 	github.com/grafana/kindsys v0.0.0-20230926104744-988ea4c8a739
 	github.com/grpc-ecosystem/go-grpc-middleware v1.4.0
 	github.com/json-iterator/go v1.1.12

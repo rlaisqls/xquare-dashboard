@@ -13,12 +13,17 @@ COPY .bingo .bingo
 COPY Makefile main.go ./
 COPY pkg pkg
 
+# Install build dependencies
+RUN if grep -i -q alpine /etc/issue; then \
+      apk add --no-cache gcc g++ make git; \
+    fi
+
+RUN make gen
+
 RUN go mod tidy \
     && go get -u -d -v ./...
 RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -a -ldflags '-s -w' -o project
 
-RUN apt update && apt install -y make
-RUN make gen-go
 RUN make build
 
 FROM scratch
