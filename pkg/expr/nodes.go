@@ -211,11 +211,14 @@ func executeDSNodesGrouped(ctx context.Context, now time.Time, vars mathexp.Vars
 	for _, nodeGroup := range byDS {
 		func() {
 			firstNode := nodeGroup[0]
+			pCtx, err := s.pCtxProvider.GetWithDataSource(ctx, firstNode.datasource.Type, firstNode.datasource)
+
 			logger := logger.FromContext(ctx).New("datasourceType", firstNode.datasource.Type,
 				"queryRefId", firstNode.refID,
 			)
 			req := &backend.QueryDataRequest{
-				Headers: firstNode.request.Headers,
+				PluginContext: pCtx,
+				Headers:       firstNode.request.Headers,
 			}
 
 			for _, dn := range nodeGroup {
@@ -276,7 +279,9 @@ func executeDSNodesGrouped(ctx context.Context, now time.Time, vars mathexp.Vars
 func (dn *DSNode) Execute(ctx context.Context, now time.Time, _ mathexp.Vars, s *Service) (r mathexp.Results, e error) {
 	logger := logger.FromContext(ctx).New("datasourceType", dn.datasource.Type, "queryRefId", dn.refID)
 
+	pCtx, err := s.pCtxProvider.GetWithDataSource(ctx, dn.datasource.Type, dn.datasource)
 	req := &backend.QueryDataRequest{
+		PluginContext: pCtx,
 		Queries: []backend.DataQuery{
 			{
 				RefID:         dn.refID,

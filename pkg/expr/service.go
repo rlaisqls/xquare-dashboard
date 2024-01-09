@@ -4,18 +4,29 @@ import (
 	"context"
 	"github.com/grafana/grafana-plugin-sdk-go/backend"
 	"github.com/prometheus/client_golang/prometheus"
+	"github.com/xquare-dashboard/pkg/plugins"
+	"github.com/xquare-dashboard/pkg/services/datasources"
+	"github.com/xquare-dashboard/pkg/services/pluginsintegration/plugincontext"
 	"time"
 )
 
 // Service is service representation for expression handling.
 type Service struct {
-	metrics     *metrics
-	dataService backend.QueryDataHandler
+	metrics      *metrics
+	dataService  backend.QueryDataHandler
+	pCtxProvider pluginContextProvider
 }
 
-func ProvideService(registerer prometheus.Registerer) *Service {
+type pluginContextProvider interface {
+	Get(ctx context.Context, pluginType datasources.DataSourceType, orgID int64) (backend.PluginContext, error)
+	GetWithDataSource(ctx context.Context, pluginType datasources.DataSourceType, ds *datasources.DataSource) (backend.PluginContext, error)
+}
+
+func ProvideService(registerer prometheus.Registerer, pluginClient plugins.Client, pCtxProvider *plugincontext.Provider) *Service {
 	return &Service{
-		metrics: newMetrics(registerer),
+		dataService:  pluginClient,
+		metrics:      newMetrics(registerer),
+		pCtxProvider: pCtxProvider,
 	}
 }
 

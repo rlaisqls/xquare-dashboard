@@ -156,6 +156,5 @@ func (m *Macaron) createContext(rw http.ResponseWriter, req *http.Request) *Cont
 // Useful if you want to control your own HTTP server.
 // Be aware that none of middleware will run without registering any router.
 func (m *Macaron) ServeHTTP(rw http.ResponseWriter, req *http.Request) {
-	println("func (m *Macaron) ServeHTTP")
 	m.Router.ServeHTTP(rw, req)
 }

@@ -11,7 +11,7 @@ type DataSource struct {
 }
 
 const (
-	LokiType       DataSourceType = "LokiType"
+	LokiType       DataSourceType = "loki"
 	PrometheusType DataSourceType = "prometheus"
 )
 
