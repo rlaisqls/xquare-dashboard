@@ -1,33 +1,33 @@
-# syntax=docker/dockerfile:1
-
-ARG BASE_IMAGE=alpine:3.18.3
 ARG GO_IMAGE=golang:1.21.5-alpine3.18
-
 ARG GO_SRC=go-builder
-ARG JS_SRC=js-builder
+FROM ${GO_IMAGE} as builder
 
-FROM --platform=${JS_PLATFORM} ${JS_IMAGE} as js-builder
-
-FROM ${GO_IMAGE} as go-builder
 ARG GO_BUILD_TAGS="oss"
 ARG WIRE_TAGS="oss"
 ARG BINGO="true"
 
-WORKDIR /tmp/grafana
+WORKDIR /build/dashboard-tsdata-bridge
 
 COPY go.* ./
 COPY .bingo .bingo
-
-RUN go mod download
-
-COPY Makefile build.go package.json ./
+COPY Makefile main.go ./
 COPY pkg pkg
 
-RUN make build WIRE_TAGS=${WIRE_TAGS}
+RUN go mod tidy \
+    && go get -u -d -v ./...
+RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -a -ldflags '-s -w' -o project
 
-EXPOSE 3000
+RUN apt update && apt install -y make
+RUN make gen-go
+RUN make build
 
-ARG RUN_SH=./packaging/docker/run.sh
-COPY ${RUN_SH} /run.sh
+FROM scratch
+COPY --from=builder /build/dashboard-tsdata-bridge /
 
-ENTRYPOINT [ "/run.sh" ]
+ARG LOKI_URL
+ENV LOKI_URL ${LOKI_URL}
+ARG PROMETHEUS_URL
+ENV PROMETHEUS_URL ${PROMETHEUS_URL}
+
+EXPOSE 9090
+CMD ["/project"]

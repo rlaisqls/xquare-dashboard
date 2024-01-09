@@ -2,6 +2,7 @@ package datasources
 
 import (
 	"github.com/xquare-dashboard/pkg/util/errutil"
+	"os"
 )
 
 type DataSourceType string
@@ -17,12 +18,12 @@ const (
 
 var Loki = DataSource{
 	Type: LokiType,
-	URL:  "http://loki.xquare.app",
+	URL:  os.Getenv("LOKI_URL"),
 }
 
 var Prometheus = DataSource{
 	Type: PrometheusType,
-	URL:  "http://prometheus.xquare.app",
+	URL:  os.Getenv("PROMETHEUS_URL"),
 }
 
 func GetDataSource(dsType DataSourceType) (*DataSource, error) {

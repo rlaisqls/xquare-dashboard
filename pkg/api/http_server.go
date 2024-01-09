@@ -69,7 +69,7 @@ func (hs *HTTPServer) Run(ctx context.Context) error {
 	// Remove any square brackets enclosing IPv6 addresses, a format we support for backwards compatibility
 	host := strings.TrimSuffix(strings.TrimPrefix("127.0.0.1", "["), "]")
 	hs.httpSrv = &http.Server{
-		Addr:        net.JoinHostPort(host, "3000"),
+		Addr:        net.JoinHostPort(host, "9090"),
 		Handler:     hs.web,
 		ReadTimeout: 10000,
 	}

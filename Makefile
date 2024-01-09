@@ -18,22 +18,10 @@ targets := $(shell echo '$(sources)' | tr "," " ")
 $(NGALERT_SPEC_TARGET):
 	+$(MAKE) -C pkg/services/ngalert/api/tooling api.json
 
-gen-go: $(WIRE)
+gen: $(WIRE)
 	@echo "generate go files"
 	$(WIRE) gen -tags $(WIRE_TAGS) ./pkg/server
 
-build-go: ## Build all Go binaries.
+build: ## Build all Go binaries.
 	@echo "build go files"
-	$(GO) run build.go $(GO_BUILD_FLAGS) build
-
-run: $(BRA) ## Build and run web server on filesystem changes.
-	$(BRA) run
-
-##@ Linting
-golangci-lint: $(GOLANGCI_LINT)
-	@echo "lint via golangci-lint"
-	$(GOLANGCI_LINT) run \
-		--config .golangci.toml \
-		$(GO_FILES)
-
-lint-go: golangci-lint ## Run all code checks for backend. You can use GO_FILES to specify exact files to check
+	$(GO) build -o project $(GO_BUILD_FLAGS)
