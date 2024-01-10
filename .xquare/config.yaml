@@ -1,6 +1,6 @@
 config:
   name: dashboard-tsdata-bridge
   service_type: be
-  port: 8080
+  port: 9090
   domain:
     prod: tsdata.xquare.app
