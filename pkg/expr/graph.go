@@ -163,6 +163,7 @@ func (s *Service) buildGraph(req *Request) (*simple.DirectedGraph, error) {
 		}
 
 		rn := &rawNode{
+			RefID:      query.RefID,
 			Query:      rawQueryProp,
 			TimeRange:  query.TimeRange,
 			DataSource: query.DataSource,
