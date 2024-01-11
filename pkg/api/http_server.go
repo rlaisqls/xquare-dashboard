@@ -8,6 +8,9 @@ import (
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/xquare-dashboard/pkg/api/routing"
 	"github.com/xquare-dashboard/pkg/middleware"
+	"github.com/xquare-dashboard/pkg/plugins"
+	"github.com/xquare-dashboard/pkg/plugins/manager/store"
+	"github.com/xquare-dashboard/pkg/services/pluginsintegration/plugincontext"
 	"net"
 	"net/http"
 	"path"
@@ -29,8 +32,11 @@ type HTTPServer struct {
 	middlewares      []web.Handler
 	RouteRegister    routing.RouteRegister
 	namedMiddlewares []routing.RegisterNamedMiddleware
+	pluginStore      store.Service
+	pluginClient     plugins.Client
 
 	ContextHandler   *contexthandler.ContextHandler
+	pCtxProvider     *plugincontext.Provider
 	queryDataService query.Service
 	promRegister     prometheus.Registerer
 	promGatherer     prometheus.Gatherer
@@ -38,19 +44,21 @@ type HTTPServer struct {
 
 func ProvideHTTPServer(
 	contextHandler *contexthandler.ContextHandler, queryDataService query.Service,
-	promGatherer prometheus.Gatherer, promRegister prometheus.Registerer,
-	routeRegister routing.RouteRegister,
+	promGatherer prometheus.Gatherer, promRegister prometheus.Registerer, pluginClient plugins.Client,
+	routeRegister routing.RouteRegister, pluginStore store.Service, pCtxProvider *plugincontext.Provider,
 ) (*HTTPServer, error) {
 	m := web.New()
-
 	hs := &HTTPServer{
 		ContextHandler:   contextHandler,
 		log:              log.New("http.server"),
 		web:              m,
 		queryDataService: queryDataService,
+		pluginClient:     pluginClient,
 		promRegister:     promRegister,
 		promGatherer:     promGatherer,
 		RouteRegister:    routeRegister,
+		pluginStore:      pluginStore,
+		pCtxProvider:     pCtxProvider,
 	}
 	hs.registerRoutes()
 	return hs, nil

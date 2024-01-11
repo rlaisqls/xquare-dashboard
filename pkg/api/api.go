@@ -42,5 +42,7 @@ func (hs *HTTPServer) registerRoutes() {
 		// metrics
 		// DataSource w/ expressions
 		apiRoute.Post("/ds/query", requestmeta.SetSLOGroup(requestmeta.SLOGroupHighSlow), routing.Wrap(hs.QueryMetrics))
+		apiRoute.Any("/datasources/uid/:uid/resources/*", requestmeta.SetSLOGroup(requestmeta.SLOGroupHighSlow), hs.CallDatasourceResourceWithUID)
 	})
+
 }
