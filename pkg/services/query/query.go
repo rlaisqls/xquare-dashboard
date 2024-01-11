@@ -6,11 +6,11 @@ import (
 	"github.com/grafana/grafana-plugin-sdk-go/backend"
 	"github.com/xquare-dashboard/pkg/api/dtos"
 	"github.com/xquare-dashboard/pkg/components/simplejson"
-	"github.com/xquare-dashboard/pkg/expr"
 	"github.com/xquare-dashboard/pkg/infra/log"
+	"github.com/xquare-dashboard/pkg/plugins"
 	"github.com/xquare-dashboard/pkg/services/contexthandler"
 	"github.com/xquare-dashboard/pkg/services/datasources"
-	"github.com/xquare-dashboard/pkg/util/errutil"
+	"github.com/xquare-dashboard/pkg/services/pluginsintegration/plugincontext"
 	"golang.org/x/sync/errgroup"
 	"net/http"
 	"runtime"
@@ -27,11 +27,12 @@ const (
 	HeaderFromExpression = "X-Grafana-From-Expr"  // used by datasources to identify expression queries
 )
 
-func ProvideService(expressionService *expr.Service) *ServiceImpl {
+func ProvideService(pCtxProvider *plugincontext.Provider, pluginClient plugins.Client) *ServiceImpl {
 	g := &ServiceImpl{
-		expressionService:    expressionService,
 		log:                  log.New("query_data"),
 		concurrentQueryLimit: runtime.NumCPU(),
+		pCtxProvider:         pCtxProvider,
+		pluginsClient:        pluginClient,
 	}
 	g.log.Info("Query Service initialization")
 	return g
@@ -46,9 +47,10 @@ type Service interface {
 var _ Service = (*ServiceImpl)(nil)
 
 type ServiceImpl struct {
-	expressionService    *expr.Service
 	log                  log.Logger
 	concurrentQueryLimit int
+	pCtxProvider         *plugincontext.Provider
+	pluginsClient        plugins.Client
 }
 
 // Run ServiceImpl.
@@ -65,13 +67,42 @@ func (s *ServiceImpl) QueryData(ctx context.Context, reqDTO dtos.MetricRequest) 
 		return nil, err
 	}
 
-	// If there are expressions, handle them and return
-	if parsedReq.hasExpression {
-		return s.handleExpressions(ctx, parsedReq)
+	if len(parsedReq.parsedQueries) == 1 {
+		return s.handleQuerySingleDatasource(ctx, parsedReq)
 	}
 
 	// If there are multiple datasources, handle their queries concurrently and return the aggregate result
 	return s.executeConcurrentQueries(ctx, reqDTO, parsedReq.parsedQueries)
+}
+
+// handleQuerySingleDatasource handles one or more queries to a single datasource
+func (s *ServiceImpl) handleQuerySingleDatasource(ctx context.Context, parsedReq *parsedRequest) (*backend.QueryDataResponse, error) {
+	println("(s *ServiceImpl) handleQuerySingleDatasource")
+	queries := parsedReq.getFlattenedQueries()
+	ds := queries[0].datasource
+
+	// ensure that each query passed to this function has the same datasource
+	for _, pq := range queries {
+		if ds.Type != pq.datasource.Type {
+			return nil, fmt.Errorf("all queries must have the same datasource - found %s and %s", ds.Type, pq.datasource.Type)
+		}
+	}
+
+	pCtx, err := s.pCtxProvider.GetWithDataSource(ctx, ds.Type, ds)
+	if err != nil {
+		return nil, err
+	}
+	req := &backend.QueryDataRequest{
+		PluginContext: pCtx,
+		Headers:       map[string]string{},
+		Queries:       []backend.DataQuery{},
+	}
+
+	for _, q := range queries {
+		req.Queries = append(req.Queries, q.query)
+	}
+
+	return s.pluginsClient.QueryData(ctx, req)
 }
 
 // splitResponse contains the results of a concurrent data source query - the response and any headers
@@ -167,42 +198,6 @@ func buildErrorResponses(err error, queries []*simplejson.Json) splitResponse {
 		}
 	}
 	return splitResponse{er, http.Header{}}
-}
-
-// handleExpressions handles POST /api/ds/query when there is an expression.
-func (s *ServiceImpl) handleExpressions(ctx context.Context, parsedReq *parsedRequest) (*backend.QueryDataResponse, error) {
-	exprReq := expr.Request{
-		Queries: []expr.Query{},
-	}
-
-	for _, pq := range parsedReq.getFlattenedQueries() {
-		if pq.datasource == nil {
-			return nil, ErrMissingDataSourceInfo.Build(errutil.TemplateData{
-				Public: map[string]any{
-					"RefId": pq.query.RefID,
-				},
-			})
-		}
-
-		exprReq.Queries = append(exprReq.Queries, expr.Query{
-			JSON:          pq.query.JSON,
-			Interval:      pq.query.Interval,
-			RefID:         pq.query.RefID,
-			MaxDataPoints: pq.query.MaxDataPoints,
-			QueryType:     pq.query.QueryType,
-			DataSource:    pq.datasource,
-			TimeRange: expr.AbsoluteTimeRange{
-				From: pq.query.TimeRange.From,
-				To:   pq.query.TimeRange.To,
-			},
-		})
-	}
-
-	qdr, err := s.expressionService.TransformData(ctx, time.Now(), &exprReq) // use time now because all queries have absolute time range
-	if err != nil {
-		return nil, fmt.Errorf("expression request error: %w", err)
-	}
-	return qdr, nil
 }
 
 // parseRequest parses a request into parsed queries grouped by datasource uid

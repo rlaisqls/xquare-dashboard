@@ -11,7 +11,6 @@ import (
 	sdkhttpclient "github.com/grafana/grafana-plugin-sdk-go/backend/httpclient"
 	"github.com/xquare-dashboard/pkg/api"
 	"github.com/xquare-dashboard/pkg/api/routing"
-	"github.com/xquare-dashboard/pkg/expr"
 	"github.com/xquare-dashboard/pkg/infra/httpclient"
 	"github.com/xquare-dashboard/pkg/infra/httpclient/httpclientprovider"
 	"github.com/xquare-dashboard/pkg/infra/metrics"
@@ -47,7 +46,6 @@ var wireSet = wire.NewSet(
 	plugincontext.ProvideService,
 	client.ProvideService,
 	wire.Bind(new(plugins.Client), new(*client.Service)),
-	expr.ProvideService,
 	metrics.ProvideRegisterer,
 	metrics.ProvideGatherer,
 )
