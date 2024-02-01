@@ -4,3 +4,4 @@ config:
   port: 9090
   domain:
     prod: tsdata.xquare.app
+    
